@@ -1,0 +1,974 @@
+````html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookmarklet AI</title>
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+    --bg:#05070a;
+    --panel:#0b1017;
+    --panel2:#101722;
+    --border:#202b38;
+    --text:#f4f7fb;
+    --muted:#8794a6;
+    --green:#63ff9d;
+    --green2:#1ee875;
+    --shadow:0 25px 90px rgba(0,0,0,.55);
+}
+
+html,body{
+    margin:0;
+    min-height:100%;
+}
+
+body{
+    min-height:100vh;
+    background:
+        radial-gradient(circle at 15% 0%,rgba(23,90,48,.38),transparent 35%),
+        radial-gradient(circle at 90% 100%,rgba(18,67,39,.25),transparent 30%),
+        var(--bg);
+    color:var(--text);
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+
+header{
+    height:72px;
+    padding:0 5%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--border);
+    background:rgba(5,8,12,.86);
+    backdrop-filter:blur(15px);
+    position:sticky;
+    top:0;
+    z-index:50;
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-weight:900;
+    letter-spacing:.4px;
+}
+
+.logoIcon{
+    width:37px;
+    height:37px;
+    display:grid;
+    place-items:center;
+    border:1px solid var(--green);
+    border-radius:10px;
+    color:var(--green);
+    font-size:21px;
+    box-shadow:0 0 25px rgba(99,255,157,.12);
+}
+
+.badge{
+    color:var(--green);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.5px;
+    padding:7px 11px;
+    border-radius:999px;
+    border:1px solid rgba(99,255,157,.28);
+    background:rgba(99,255,157,.04);
+}
+
+main{
+    width:min(1050px,92%);
+    margin:55px auto 85px;
+}
+
+.hero{
+    text-align:center;
+    margin-bottom:32px;
+}
+
+.hero h1{
+    margin:0;
+    font-size:clamp(42px,7vw,76px);
+    line-height:.98;
+    letter-spacing:-3px;
+}
+
+.hero h1 span{
+    color:var(--green);
+    text-shadow:0 0 35px rgba(99,255,157,.15);
+}
+
+.hero p{
+    margin:15px 0 0;
+    color:var(--muted);
+    font-size:15px;
+}
+
+.card{
+    padding:24px;
+    border:1px solid var(--border);
+    border-radius:20px;
+    background:linear-gradient(145deg,#0d141c,#090e14);
+    box-shadow:var(--shadow);
+}
+
+label{
+    display:block;
+    margin-bottom:9px;
+    color:#bdc8d7;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+}
+
+textarea,
+input{
+    width:100%;
+    outline:none;
+    border:1px solid #293646;
+    border-radius:12px;
+    background:#070b10;
+    color:var(--text);
+    padding:15px;
+    font:inherit;
+    transition:.2s;
+}
+
+textarea{
+    min-height:160px;
+    resize:vertical;
+}
+
+textarea:focus,
+input:focus{
+    border-color:var(--green);
+    box-shadow:0 0 0 3px rgba(99,255,157,.08);
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 200px;
+    gap:12px;
+    margin-top:14px;
+}
+
+button{
+    border:0;
+    border-radius:12px;
+    padding:13px 18px;
+    background:var(--green);
+    color:#041007;
+    font-size:14px;
+    font-weight:900;
+    cursor:pointer;
+    transition:.18s;
+}
+
+button:hover{
+    filter:brightness(1.07);
+    transform:translateY(-1px);
+}
+
+button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+    transform:none;
+}
+
+.hint{
+    margin-top:16px;
+    padding:15px 16px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#0a0f15;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.65;
+}
+
+.hint strong{
+    color:#e5ebf3;
+}
+
+.hint code{
+    color:#aaffc5;
+}
+
+.output{
+    display:none;
+    margin-top:20px;
+}
+
+.output.show{
+    display:block;
+}
+
+.status{
+    margin-bottom:9px;
+    color:var(--muted);
+    font-size:12px;
+}
+
+.codeWrap{
+    position:relative;
+}
+
+pre{
+    min-height:130px;
+    max-height:420px;
+    overflow:auto;
+    margin:0;
+    padding:48px 18px 18px;
+    border:1px solid #2a3746;
+    border-radius:13px;
+    background:#030608;
+    color:#aaffc5;
+    font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+}
+
+.copyButton{
+    position:absolute;
+    right:10px;
+    top:10px;
+    padding:8px 12px;
+    border:1px solid #344253;
+    background:#18222e;
+    color:#e8eef6;
+    font-size:12px;
+}
+
+.copyButton:hover{
+    background:#223040;
+}
+
+footer{
+    margin-top:28px;
+    text-align:center;
+    color:#566272;
+    font-size:11px;
+}
+
+@media(max-width:650px){
+    .row{
+        grid-template-columns:1fr;
+    }
+
+    .card{
+        padding:16px;
+    }
+
+    header{
+        padding:0 4%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">
+        <div class="logoIcon">⌁</div>
+        Bookmarklet AI
+    </div>
+
+    <div class="badge">
+        BOOKMARKLETS ONLY
+    </div>
+</header>
+
+
+<main>
+
+<section class="hero">
+    <h1>
+        Build a <span>Bookmarklet.</span>
+    </h1>
+
+    <p>
+        Describe what you want and Groq generates one ready-to-use bookmarklet.
+    </p>
+</section>
+
+
+<section class="card">
+
+    <label for="requestInput">
+        What should the bookmarklet do?
+    </label>
+
+    <textarea
+        id="requestInput"
+        placeholder="Example: Make a bookmarklet that adds a draggable dark-mode button to any website."
+    ></textarea>
+
+
+    <div class="row">
+
+        <input
+            id="apiKeyInput"
+            type="password"
+            placeholder="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"
+        >
+
+        <button id="generateButton">
+            Generate Bookmarklet
+        </button>
+
+    </div>
+
+
+    <div class="hint">
+
+        <strong>GROQ API KEY LOCATION:</strong><br><br>
+
+        Find this line near the bottom of this file:
+
+        <br><br>
+
+        <code>
+            const GROQ_API_KEY = "";
+        </code>
+
+        <br><br>
+
+        Put your Groq key between the quotation marks:
+
+        <br><br>
+
+        <code>
+            const GROQ_API_KEY = "gsk_your_key_here";
+        </code>
+
+        <br><br>
+
+        You can also use the box above instead.
+
+        <br><br>
+
+        ⚠️ A key placed directly in a GitHub Pages file is public.
+        Anyone who can view the source can see it.
+    </div>
+
+
+    <div id="output" class="output">
+
+        <div id="status" class="status">
+        </div>
+
+        <div class="codeWrap">
+
+            <button
+                id="copyButton"
+                class="copyButton"
+            >
+                Copy
+            </button>
+
+            <pre id="bookmarkletCode"></pre>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<footer>
+    Bookmarklet AI • Groq powered • GitHub Pages
+</footer>
+
+</main>
+
+
+<script>
+
+/*
+============================================================
+                    GROQ API KEY
+============================================================
+
+PASTE YOUR GROQ API KEY HERE.
+
+Example:
+
+const GROQ_API_KEY = "gsk_xxxxxxxxxxxxxxxxxxxxx";
+
+WARNING:
+Because this is a GitHub Pages/static website, a key stored
+here becomes visible to anyone who can inspect the source.
+
+============================================================
+*/
+
+const GROQ_API_KEY = "";
+
+
+/*
+============================================================
+                    GROQ MODEL
+============================================================
+
+Current Groq production model selected for generation.
+
+============================================================
+*/
+
+const GROQ_MODEL = "openai/gpt-oss-120b";
+
+
+/*
+============================================================
+                    GROQ ENDPOINT
+============================================================
+*/
+
+const GROQ_ENDPOINT =
+    "https://api.groq.com/openai/v1/chat/completions";
+
+
+/*
+============================================================
+                    DOM ELEMENTS
+============================================================
+*/
+
+const requestInput =
+    document.getElementById("requestInput");
+
+const apiKeyInput =
+    document.getElementById("apiKeyInput");
+
+const generateButton =
+    document.getElementById("generateButton");
+
+const output =
+    document.getElementById("output");
+
+const statusText =
+    document.getElementById("status");
+
+const bookmarkletCode =
+    document.getElementById("bookmarkletCode");
+
+const copyButton =
+    document.getElementById("copyButton");
+
+
+/*
+============================================================
+                  CLEAN BOOKMARKLET
+============================================================
+*/
+
+function cleanBookmarklet(text){
+
+    text = String(text || "")
+        .trim();
+
+
+    /*
+    Remove markdown fences.
+    */
+
+    text = text
+        .replace(/^```javascript\s*/i,"")
+        .replace(/^```js\s*/i,"")
+        .replace(/^```\s*/i,"")
+        .replace(/\s*```$/,"")
+        .trim();
+
+
+    /*
+    Find javascript:
+    */
+
+    const position =
+        text.search(/javascript\s*:/i);
+
+
+    if(position !== -1){
+
+        text =
+            text.slice(position);
+
+    }
+
+
+    /*
+    Guarantee bookmarklet prefix.
+    */
+
+    if(!/^javascript:/i.test(text)){
+
+        text =
+            "javascript:(()=>{" +
+            text +
+            "})()";
+
+    }
+
+
+    /*
+    Remove line breaks.
+    */
+
+    text =
+        text.replace(/\r?\n/g," ");
+
+
+    return text.trim();
+
+}
+
+
+/*
+============================================================
+                    GROQ GENERATOR
+============================================================
+*/
+
+async function generateWithGroq(
+    userRequest,
+    key
+){
+
+    const systemPrompt = `You are a bookmarklet generator.
+
+YOUR OUTPUT RULES ARE EXTREMELY STRICT:
+
+- Return ONLY ONE bookmarklet.
+- The result MUST begin with javascript:
+- NEVER provide an explanation.
+- NEVER provide markdown.
+- NEVER use code fences.
+- NEVER provide multiple choices.
+- NEVER provide commentary before or after the bookmarklet.
+- NEVER say "here is your bookmarklet".
+- The response must be directly pasteable into a browser bookmark.
+- Use a self-contained JavaScript IIFE whenever practical.
+- Make the bookmarklet operate on the current webpage.
+- Do not require external packages.
+- Do not use server-side code.
+- Keep the bookmarklet functional and reasonably compact.
+- Do not create malware, credential theft, phishing, destructive attacks, or security bypasses.
+
+The user's requested functionality is the ONLY thing you should implement.
+
+RETURN ONLY THE BOOKMARKLET.`;
+
+
+
+    const response =
+        await fetch(
+            GROQ_ENDPOINT,
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        "Bearer " + key
+                },
+
+                body:JSON.stringify({
+
+                    model:GROQ_MODEL,
+
+                    temperature:0.15,
+
+                    max_tokens:8192,
+
+                    messages:[
+
+                        {
+                            role:"system",
+                            content:systemPrompt
+                        },
+
+                        {
+                            role:"user",
+                            content:userRequest
+                        }
+
+                    ]
+
+                })
+            }
+        );
+
+
+    if(!response.ok){
+
+        let details = "";
+
+        try{
+            details =
+                await response.text();
+        }
+        catch(error){
+            details = "";
+        }
+
+
+        throw new Error(
+            "Groq request failed (" +
+            response.status +
+            "). " +
+            details.slice(0,220)
+        );
+
+    }
+
+
+    const data =
+        await response.json();
+
+
+    const content =
+        data?.choices?.[0]?.message?.content;
+
+
+    if(!content){
+
+        throw new Error(
+            "Groq returned an empty response."
+        );
+
+    }
+
+
+    return cleanBookmarklet(content);
+
+}
+
+
+/*
+============================================================
+                    DEMO MODE
+============================================================
+
+Used only if you don't provide a key.
+============================================================
+*/
+
+function demoBookmarklet(prompt){
+
+    const text =
+        prompt.toLowerCase();
+
+
+    /*
+    DARK MODE
+    */
+
+    if(
+        text.includes("dark mode")
+    ){
+
+        return `javascript:(()=>{let s=document.getElementById('bookmarklet-ai-dark');if(s){s.remove();return;}s=document.createElement('style');s.id='bookmarklet-ai-dark';s.textContent='html{filter:invert(1) hue-rotate(180deg)!important}img,video,iframe,canvas{filter:invert(1) hue-rotate(180deg)!important}';document.head.appendChild(s)})()`;
+
+    }
+
+
+    /*
+    SCROLL TO TOP
+    */
+
+    if(
+        text.includes("scroll") &&
+        text.includes("top")
+    ){
+
+        return `javascript:(()=>window.scrollTo({top:0,behavior:'smooth'}))()`;
+
+    }
+
+
+    /*
+    SCROLL TO BOTTOM
+    */
+
+    if(
+        text.includes("scroll") &&
+        text.includes("bottom")
+    ){
+
+        return `javascript:(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'}))()`;
+
+    }
+
+
+    /*
+    HIGHLIGHT LINKS
+    */
+
+    if(
+        text.includes("highlight") &&
+        text.includes("link")
+    ){
+
+        return `javascript:(()=>{document.querySelectorAll('a').forEach(a=>a.style.outline='2px solid #00ff66')})()`;
+
+    }
+
+
+    /*
+    FALLBACK
+    */
+
+    return `javascript:(()=>{alert("Add your Groq API key to index.html to enable AI bookmarklet generation.")})()`;
+
+}
+
+
+/*
+============================================================
+                  GENERATE BUTTON
+============================================================
+*/
+
+generateButton.addEventListener(
+    "click",
+    async function(){
+
+        const prompt =
+            requestInput.value.trim();
+
+
+        /*
+        API key from the page first.
+        Then API key hard-coded into this file.
+        */
+
+        const key =
+            apiKeyInput.value.trim() ||
+            GROQ_API_KEY.trim();
+
+
+        output.classList.add("show");
+
+
+        if(!prompt){
+
+            statusText.textContent =
+                "Enter a bookmarklet request first.";
+
+            bookmarkletCode.textContent =
+                "";
+
+            requestInput.focus();
+
+            return;
+
+        }
+
+
+        generateButton.disabled =
+            true;
+
+        generateButton.textContent =
+            "Generating...";
+
+
+        statusText.textContent =
+            "Groq is generating your bookmarklet...";
+
+
+        bookmarkletCode.textContent =
+            "";
+
+
+        try{
+
+            let result;
+
+
+            /*
+            Real Groq generation
+            */
+
+            if(key){
+
+                result =
+                    await generateWithGroq(
+                        prompt,
+                        key
+                    );
+
+
+                statusText.textContent =
+                    "Generated with Groq";
+
+            }
+
+
+            /*
+            Demo mode
+            */
+
+            else{
+
+                result =
+                    demoBookmarklet(prompt);
+
+
+                statusText.textContent =
+                    "Demo mode — add your Groq API key";
+
+            }
+
+
+            bookmarkletCode.textContent =
+                result;
+
+        }
+
+
+        catch(error){
+
+            statusText.textContent =
+                error.message;
+
+            bookmarkletCode.textContent =
+                "";
+
+        }
+
+
+        finally{
+
+            generateButton.disabled =
+                false;
+
+            generateButton.textContent =
+                "Generate Bookmarklet";
+
+        }
+
+    }
+);
+
+
+/*
+============================================================
+                    COPY BUTTON
+============================================================
+*/
+
+copyButton.addEventListener(
+    "click",
+    async function(){
+
+        const text =
+            bookmarkletCode.textContent.trim();
+
+
+        if(!text){
+
+            return;
+
+        }
+
+
+        try{
+
+            await navigator.clipboard.writeText(
+                text
+            );
+
+        }
+
+        catch(error){
+
+            const textarea =
+                document.createElement("textarea");
+
+
+            textarea.value =
+                text;
+
+
+            textarea.style.position =
+                "fixed";
+
+
+            textarea.style.opacity =
+                "0";
+
+
+            document.body.appendChild(
+                textarea
+            );
+
+
+            textarea.focus();
+
+            textarea.select();
+
+
+            document.execCommand(
+                "copy"
+            );
+
+
+            textarea.remove();
+
+        }
+
+
+        copyButton.textContent =
+            "Copied!";
+
+
+        setTimeout(
+            function(){
+
+                copyButton.textContent =
+                    "Copy";
+
+            },
+            1200
+        );
+
+    }
+);
+
+
+/*
+============================================================
+                  CTRL + ENTER
+============================================================
+*/
+
+requestInput.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            (event.ctrlKey || event.metaKey) &&
+            event.key === "Enter"
+        ){
+
+            generateButton.click();
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
+````
