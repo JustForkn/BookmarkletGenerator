@@ -3,202 +3,864 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Bookmarklet AI</title>
 
 <style>
-*{box-sizing:border-box}
+/* =========================================================
+   ROOT
+========================================================= */
 
 :root{
-    --bg:#05070a;
-    --panel:#0b1017;
-    --panel2:#101722;
-    --border:#202b38;
-    --text:#f4f7fb;
-    --muted:#8794a6;
+    --bg:#030507;
+    --bg2:#070b10;
+    --panel:rgba(10,15,22,.82);
+    --panel-solid:#0b1017;
+    --panel-light:rgba(18,26,36,.9);
+    --border:rgba(126,255,173,.12);
+    --border-bright:rgba(99,255,157,.35);
     --green:#63ff9d;
-    --green2:#1ee875;
-    --shadow:0 25px 90px rgba(0,0,0,.55);
+    --green2:#20d878;
+    --cyan:#55eaff;
+    --purple:#a16bff;
+    --red:#ff5570;
+    --yellow:#ffd45c;
+    --text:#f2f7f4;
+    --muted:#829091;
+    --sidebar:285px;
+    --sidebar-collapsed:76px;
+    --radius:18px;
 }
 
-html,body{
-    margin:0;
-    min-height:100%;
+/* =========================================================
+   RESET
+========================================================= */
+
+*{
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
 }
 
 body{
+    margin:0;
     min-height:100vh;
+    overflow-x:hidden;
     background:
-        radial-gradient(circle at 15% 0%,rgba(23,90,48,.38),transparent 35%),
-        radial-gradient(circle at 90% 100%,rgba(18,67,39,.25),transparent 30%),
+        radial-gradient(circle at 10% 0%,rgba(36,160,81,.18),transparent 28%),
+        radial-gradient(circle at 100% 20%,rgba(65,120,255,.09),transparent 28%),
+        radial-gradient(circle at 50% 100%,rgba(71,255,162,.07),transparent 35%),
         var(--bg);
     color:var(--text);
-    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
 }
 
-header{
-    height:72px;
-    padding:0 5%;
+/* =========================================================
+   ANIMATED GRID
+========================================================= */
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:.25;
+    background-image:
+        linear-gradient(rgba(99,255,157,.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(99,255,157,.025) 1px,transparent 1px);
+    background-size:40px 40px;
+    animation:gridMove 18s linear infinite;
+    z-index:-3;
+}
+
+@keyframes gridMove{
+    from{
+        background-position:0 0,0 0;
+    }
+
+    to{
+        background-position:40px 40px,40px 40px;
+    }
+}
+
+/* =========================================================
+   PARTICLE CANVAS
+========================================================= */
+
+#particles{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:-2;
+}
+
+/* =========================================================
+   BOOT SCREEN
+========================================================= */
+
+#bootScreen{
+    position:fixed;
+    inset:0;
+    background:#020406;
+    z-index:99999;
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    border-bottom:1px solid var(--border);
-    background:rgba(5,8,12,.86);
-    backdrop-filter:blur(15px);
-    position:sticky;
-    top:0;
-    z-index:50;
+    justify-content:center;
+    transition:
+        opacity .7s ease,
+        visibility .7s ease;
 }
 
-.logo{
+#bootScreen.hidden{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+}
+
+.bootBox{
+    width:min(470px,88%);
+    text-align:center;
+}
+
+.bootLogo{
+    width:88px;
+    height:88px;
+    margin:0 auto 24px;
+    border-radius:25px;
+    border:1px solid var(--green);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--green);
+    font-size:42px;
+    box-shadow:
+        0 0 30px rgba(99,255,157,.16),
+        inset 0 0 30px rgba(99,255,157,.05);
+    animation:
+        bootPulse 1.5s ease-in-out infinite,
+        bootRotate 8s linear infinite;
+}
+
+@keyframes bootPulse{
+    0%,100%{
+        transform:scale(1);
+    }
+
+    50%{
+        transform:scale(1.06);
+    }
+}
+
+@keyframes bootRotate{
+    to{
+        filter:hue-rotate(360deg);
+    }
+}
+
+.bootTitle{
+    font-size:27px;
+    font-weight:900;
+    letter-spacing:-.8px;
+    margin-bottom:7px;
+}
+
+.bootSubtitle{
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:24px;
+}
+
+.bootBar{
+    width:100%;
+    height:5px;
+    background:#0b1117;
+    border-radius:99px;
+    overflow:hidden;
+    border:1px solid rgba(99,255,157,.08);
+}
+
+.bootFill{
+    height:100%;
+    width:0;
+    background:
+        linear-gradient(
+            90deg,
+            var(--green2),
+            var(--cyan),
+            var(--purple),
+            var(--green)
+        );
+    background-size:250% 100%;
+    animation:
+        bootLoading 2.2s ease forwards,
+        gradientShift 2s linear infinite;
+}
+
+@keyframes bootLoading{
+    to{
+        width:100%;
+    }
+}
+
+@keyframes gradientShift{
+    to{
+        background-position:250% 0;
+    }
+}
+
+.bootStatus{
+    margin-top:11px;
+    color:#66736f;
+    font-size:11px;
+    font-family:monospace;
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+#app{
+    opacity:0;
+    transform:scale(.985);
+    transition:
+        opacity .7s ease,
+        transform .7s ease;
+}
+
+#app.ready{
+    opacity:1;
+    transform:scale(1);
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:var(--sidebar);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(7,11,16,.97),
+            rgba(4,7,11,.98)
+        );
+    border-right:1px solid var(--border);
+    backdrop-filter:blur(18px);
+    z-index:500;
+    transition:
+        width .35s cubic-bezier(.2,.8,.2,1),
+        transform .35s ease;
+    overflow:hidden;
+}
+
+.sidebar.collapsed{
+    width:var(--sidebar-collapsed);
+}
+
+.sidebarInner{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    padding:18px 14px;
+}
+
+.brand{
     display:flex;
     align-items:center;
     gap:12px;
-    font-weight:900;
-    letter-spacing:.4px;
+    min-height:48px;
+    margin-bottom:25px;
 }
 
-.logoIcon{
-    width:37px;
-    height:37px;
+.brandIcon{
+    flex:0 0 44px;
+    width:44px;
+    height:44px;
+    border:1px solid rgba(99,255,157,.45);
+    border-radius:13px;
     display:grid;
     place-items:center;
-    border:1px solid var(--green);
-    border-radius:10px;
     color:var(--green);
-    font-size:21px;
-    box-shadow:0 0 25px rgba(99,255,157,.12);
+    box-shadow:0 0 28px rgba(99,255,157,.12);
+    animation:brandGlow 3s ease-in-out infinite;
 }
 
-.badge{
-    color:var(--green);
-    font-size:11px;
+@keyframes brandGlow{
+    0%,100%{
+        box-shadow:0 0 20px rgba(99,255,157,.08);
+    }
+
+    50%{
+        box-shadow:0 0 35px rgba(99,255,157,.2);
+    }
+}
+
+.brandText{
+    white-space:nowrap;
+    transition:
+        opacity .2s,
+        transform .25s;
+}
+
+.brandText strong{
+    display:block;
+    font-size:14px;
     font-weight:900;
-    letter-spacing:.5px;
-    padding:7px 11px;
-    border-radius:999px;
-    border:1px solid rgba(99,255,157,.28);
-    background:rgba(99,255,157,.04);
 }
 
-main{
-    width:min(1050px,92%);
-    margin:55px auto 85px;
+.brandText span{
+    color:#65716f;
+    font-size:10px;
+}
+
+.sidebar.collapsed .brandText{
+    opacity:0;
+    transform:translateX(-10px);
+    pointer-events:none;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.navButton{
+    width:100%;
+    min-height:46px;
+    border:1px solid transparent;
+    background:transparent;
+    color:#91a09e;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    gap:13px;
+    padding:0 12px;
+    cursor:pointer;
+    transition:.2s;
+    text-align:left;
+}
+
+.navButton:hover{
+    color:#eaf5ef;
+    background:rgba(255,255,255,.025);
+}
+
+.navButton.active{
+    color:var(--green);
+    background:rgba(99,255,157,.055);
+    border-color:rgba(99,255,157,.13);
+    box-shadow:inset 3px 0 0 var(--green);
+}
+
+.navIcon{
+    width:22px;
+    flex:0 0 22px;
+    text-align:center;
+    font-size:17px;
+}
+
+.navText{
+    white-space:nowrap;
+    transition:.2s;
+    font-size:12px;
+    font-weight:750;
+}
+
+.sidebar.collapsed .navText{
+    opacity:0;
+    transform:translateX(-10px);
+    pointer-events:none;
+}
+
+.sidebarBottom{
+    margin-top:auto;
+}
+
+.sidebarFooter{
+    color:#53605e;
+    font-size:9px;
+    line-height:1.6;
+    padding:10px;
+    transition:.2s;
+}
+
+.sidebar.collapsed .sidebarFooter{
+    opacity:0;
+}
+
+.collapseButton{
+    position:absolute;
+    right:-13px;
+    top:73px;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:1px solid #2b3836;
+    background:#0a1015;
+    color:#9ba9a5;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:.3s;
+    z-index:20;
+}
+
+.collapseButton:hover{
+    color:var(--green);
+    border-color:var(--green);
+}
+
+.sidebar.collapsed .collapseButton{
+    transform:rotate(180deg);
+}
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.main{
+    margin-left:var(--sidebar);
+    min-height:100vh;
+    transition:margin-left .35s cubic-bezier(.2,.8,.2,1);
+}
+
+.sidebar.collapsed + .main{
+    margin-left:var(--sidebar-collapsed);
+}
+
+.topbar{
+    height:72px;
+    border-bottom:1px solid var(--border);
+    background:rgba(4,8,12,.72);
+    backdrop-filter:blur(16px);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 34px;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.topTitle{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:#b4bfbd;
+    font-size:12px;
+}
+
+.liveDot{
+    width:8px;
+    height:8px;
+    background:var(--green);
+    border-radius:50%;
+    box-shadow:0 0 12px var(--green);
+    animation:liveBlink 1.5s infinite;
+}
+
+@keyframes liveBlink{
+    0%,100%{
+        opacity:1;
+    }
+
+    50%{
+        opacity:.35;
+    }
+}
+
+.topActions{
+    display:flex;
+    gap:8px;
+}
+
+.iconButton{
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,.025);
+    color:#879591;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.iconButton:hover{
+    color:var(--green);
+    border-color:var(--border-bright);
+    transform:translateY(-1px);
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.content{
+    width:min(1100px,92%);
+    margin:0 auto;
+    padding:52px 0 80px;
 }
 
 .hero{
     text-align:center;
-    margin-bottom:32px;
+    margin-bottom:34px;
+}
+
+.heroEyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 12px;
+    border:1px solid rgba(99,255,157,.14);
+    border-radius:999px;
+    color:#7fa28c;
+    background:rgba(99,255,157,.025);
+    font-size:10px;
+    font-weight:850;
+    letter-spacing:.8px;
+    margin-bottom:17px;
 }
 
 .hero h1{
     margin:0;
-    font-size:clamp(42px,7vw,76px);
-    line-height:.98;
-    letter-spacing:-3px;
+    font-size:clamp(44px,7vw,78px);
+    line-height:.94;
+    letter-spacing:-4px;
 }
 
 .hero h1 span{
-    color:var(--green);
-    text-shadow:0 0 35px rgba(99,255,157,.15);
+    background:
+        linear-gradient(
+            90deg,
+            var(--green),
+            var(--cyan),
+            #cb8cff,
+            var(--green)
+        );
+    background-size:250% auto;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    animation:titleGradient 6s linear infinite;
+}
+
+@keyframes titleGradient{
+    to{
+        background-position:250% center;
+    }
 }
 
 .hero p{
-    margin:15px 0 0;
-    color:var(--muted);
-    font-size:15px;
+    margin:18px auto 0;
+    color:#74817f;
+    max-width:650px;
+    font-size:14px;
+    line-height:1.65;
 }
 
-.card{
-    padding:24px;
+/* =========================================================
+   GENERATOR CARD
+========================================================= */
+
+.generator{
+    position:relative;
+    overflow:hidden;
     border:1px solid var(--border);
-    border-radius:20px;
-    background:linear-gradient(145deg,#0d141c,#090e14);
-    box-shadow:var(--shadow);
+    border-radius:22px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(13,20,28,.94),
+            rgba(7,11,16,.94)
+        );
+    box-shadow:
+        0 30px 100px rgba(0,0,0,.42),
+        inset 0 1px rgba(255,255,255,.018);
+}
+
+.generator::before{
+    content:"";
+    position:absolute;
+    width:280px;
+    height:280px;
+    right:-120px;
+    top:-130px;
+    border-radius:50%;
+    background:rgba(99,255,157,.045);
+    filter:blur(20px);
+    animation:cardAura 5s ease-in-out infinite;
+}
+
+@keyframes cardAura{
+    0%,100%{
+        transform:scale(1);
+        opacity:.6;
+    }
+
+    50%{
+        transform:scale(1.25);
+        opacity:1;
+    }
+}
+
+.generatorHeader{
+    padding:22px 24px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.generatorTitle{
+    font-size:13px;
+    font-weight:900;
+}
+
+.generatorTitle small{
+    display:block;
+    color:#5e6c68;
+    font-size:10px;
+    font-weight:600;
+    margin-top:4px;
+}
+
+.engineBadge{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:6px 9px;
+    border-radius:8px;
+    background:rgba(99,255,157,.045);
+    border:1px solid rgba(99,255,157,.1);
+    color:#7fcf99;
+    font-size:9px;
+    font-weight:850;
+}
+
+.generatorBody{
+    padding:24px;
 }
 
 label{
     display:block;
-    margin-bottom:9px;
-    color:#bdc8d7;
-    font-size:12px;
-    font-weight:900;
+    color:#9aa7a4;
+    font-size:10px;
+    font-weight:850;
     text-transform:uppercase;
     letter-spacing:.8px;
-}
-
-textarea,
-input{
-    width:100%;
-    outline:none;
-    border:1px solid #293646;
-    border-radius:12px;
-    background:#070b10;
-    color:var(--text);
-    padding:15px;
-    font:inherit;
-    transition:.2s;
+    margin-bottom:9px;
 }
 
 textarea{
-    min-height:160px;
+    width:100%;
+    min-height:175px;
     resize:vertical;
+    outline:none;
+    border:1px solid #24312f;
+    border-radius:14px;
+    padding:17px;
+    background:#05090d;
+    color:#ecf5f0;
+    font:13px/1.65 inherit;
+    transition:.25s;
 }
 
-textarea:focus,
-input:focus{
-    border-color:var(--green);
-    box-shadow:0 0 0 3px rgba(99,255,157,.08);
+textarea::placeholder{
+    color:#495552;
 }
 
-.row{
+textarea:focus{
+    border-color:rgba(99,255,157,.38);
+    box-shadow:
+        0 0 0 4px rgba(99,255,157,.035),
+        0 0 35px rgba(99,255,157,.04);
+}
+
+.controlRow{
     display:grid;
-    grid-template-columns:1fr 200px;
+    grid-template-columns:1fr 190px;
     gap:12px;
-    margin-top:14px;
+    margin-top:13px;
 }
 
-button{
+.keyInput{
+    position:relative;
+}
+
+.keyInput input{
+    width:100%;
+    height:48px;
+    border:1px solid #24312f;
+    border-radius:12px;
+    background:#05090d;
+    color:#d9e7df;
+    outline:none;
+    padding:0 14px;
+    font:12px ui-monospace,monospace;
+}
+
+.keyInput input:focus{
+    border-color:rgba(99,255,157,.36);
+}
+
+.generateButton{
+    height:48px;
     border:0;
     border-radius:12px;
-    padding:13px 18px;
-    background:var(--green);
-    color:#041007;
-    font-size:14px;
-    font-weight:900;
+    background:
+        linear-gradient(
+            110deg,
+            var(--green2),
+            var(--green),
+            var(--cyan)
+        );
+    background-size:220% 100%;
+    color:#031008;
+    font-size:12px;
+    font-weight:950;
     cursor:pointer;
-    transition:.18s;
+    box-shadow:
+        0 10px 35px rgba(41,230,126,.1);
+    transition:.2s;
+    animation:buttonGradient 5s linear infinite;
 }
 
-button:hover{
-    filter:brightness(1.07);
-    transform:translateY(-1px);
+@keyframes buttonGradient{
+    to{
+        background-position:220% 0;
+    }
 }
 
-button:disabled{
-    opacity:.5;
+.generateButton:hover{
+    transform:translateY(-2px);
+    box-shadow:
+        0 15px 45px rgba(41,230,126,.18);
+}
+
+.generateButton:disabled{
     cursor:not-allowed;
+    opacity:.55;
     transform:none;
 }
 
-.hint{
-    margin-top:16px;
-    padding:15px 16px;
-    border:1px solid var(--border);
-    border-radius:12px;
-    background:#0a0f15;
-    color:var(--muted);
-    font-size:12px;
-    line-height:1.65;
+.infoLine{
+    margin-top:13px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    color:#56625f;
+    font-size:10px;
 }
 
-.hint strong{
-    color:#e5ebf3;
+.shortcut{
+    color:#6e7a76;
 }
 
-.hint code{
-    color:#aaffc5;
+kbd{
+    padding:3px 6px;
+    border:1px solid #27322f;
+    border-bottom-color:#18211f;
+    border-radius:5px;
+    background:#0b1110;
+    font-family:monospace;
+    color:#a5b3ae;
 }
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.loadingBox{
+    display:none;
+    margin-top:20px;
+    padding:18px;
+    border:1px solid rgba(99,255,157,.1);
+    border-radius:14px;
+    background:rgba(99,255,157,.025);
+}
+
+.loadingBox.show{
+    display:block;
+    animation:fadeIn .3s ease;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(5px);
+    }
+
+    to{
+        opacity:1;
+        transform:none;
+    }
+}
+
+.loadingTop{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.loadingLabel{
+    font-size:11px;
+    color:#92a099;
+    font-weight:750;
+}
+
+.loadingPercent{
+    font:10px monospace;
+    color:var(--green);
+}
+
+.loadingTrack{
+    height:4px;
+    background:#101815;
+    border-radius:99px;
+    overflow:hidden;
+}
+
+.loadingProgress{
+    height:100%;
+    width:0;
+    background:
+        linear-gradient(
+            90deg,
+            var(--green),
+            var(--cyan)
+        );
+    border-radius:99px;
+    transition:width .15s;
+}
+
+.loadingStatus{
+    margin-top:10px;
+    color:#586660;
+    font-size:10px;
+    font-family:monospace;
+}
+
+/* =========================================================
+   OUTPUT
+========================================================= */
 
 .output{
     display:none;
@@ -207,66 +869,432 @@ button:disabled{
 
 .output.show{
     display:block;
+    animation:outputReveal .45s ease;
 }
 
-.status{
+@keyframes outputReveal{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+
+    to{
+        opacity:1;
+        transform:none;
+    }
+}
+
+.outputHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
     margin-bottom:9px;
-    color:var(--muted);
-    font-size:12px;
 }
 
-.codeWrap{
+.outputTitle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#a6b3ae;
+    font-size:10px;
+    font-weight:850;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+}
+
+.successDot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 10px rgba(99,255,157,.6);
+}
+
+.outputActions{
+    display:flex;
+    gap:7px;
+}
+
+.smallButton{
+    height:32px;
+    padding:0 11px;
+    border-radius:9px;
+    border:1px solid #293733;
+    background:#0c1312;
+    color:#96a29e;
+    font-size:10px;
+    font-weight:800;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.smallButton:hover{
+    color:var(--green);
+    border-color:rgba(99,255,157,.3);
+}
+
+.codeBox{
     position:relative;
 }
 
 pre{
-    min-height:130px;
-    max-height:420px;
+    min-height:155px;
+    max-height:460px;
     overflow:auto;
     margin:0;
-    padding:48px 18px 18px;
-    border:1px solid #2a3746;
-    border-radius:13px;
-    background:#030608;
-    color:#aaffc5;
-    font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    padding:50px 18px 18px;
+    border:1px solid #24312f;
+    border-radius:14px;
+    background:
+        linear-gradient(
+            180deg,
+            #040706,
+            #030504
+        );
+    color:#aaffc6;
+    font:11px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     white-space:pre-wrap;
     overflow-wrap:anywhere;
 }
 
-.copyButton{
+.copyMain{
     position:absolute;
-    right:10px;
     top:10px;
-    padding:8px 12px;
-    border:1px solid #344253;
-    background:#18222e;
-    color:#e8eef6;
-    font-size:12px;
+    right:10px;
 }
 
-.copyButton:hover{
-    background:#223040;
-}
+/* =========================================================
+   EMPTY STATE
+========================================================= */
 
-footer{
-    margin-top:28px;
+.emptyState{
+    margin-top:20px;
+    padding:20px;
+    border:1px dashed rgba(126,255,173,.09);
+    border-radius:14px;
+    color:#4d5a56;
     text-align:center;
-    color:#566272;
     font-size:11px;
 }
 
-@media(max-width:650px){
-    .row{
+/* =========================================================
+   SETTINGS PANELS
+========================================================= */
+
+.panel{
+    display:none;
+}
+
+.panel.active{
+    display:block;
+    animation:panelIn .35s ease;
+}
+
+@keyframes panelIn{
+    from{
+        opacity:0;
+        transform:translateY(8px);
+    }
+
+    to{
+        opacity:1;
+        transform:none;
+    }
+}
+
+.settingsCard{
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:22px;
+    background:rgba(10,15,21,.85);
+}
+
+.settingsTitle{
+    font-size:14px;
+    font-weight:900;
+    margin-bottom:5px;
+}
+
+.settingsDescription{
+    color:#67736f;
+    font-size:11px;
+    line-height:1.6;
+    margin-bottom:20px;
+}
+
+.setting{
+    padding:15px 0;
+    border-top:1px solid rgba(255,255,255,.035);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+}
+
+.settingInfo strong{
+    display:block;
+    font-size:11px;
+}
+
+.settingInfo span{
+    display:block;
+    margin-top:4px;
+    color:#58635f;
+    font-size:10px;
+}
+
+.toggle{
+    width:44px;
+    height:24px;
+    border-radius:99px;
+    border:1px solid #26332f;
+    background:#0b1110;
+    cursor:pointer;
+    position:relative;
+}
+
+.toggle::after{
+    content:"";
+    position:absolute;
+    top:3px;
+    left:3px;
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:#61706b;
+    transition:.2s;
+}
+
+.toggle.on{
+    background:rgba(99,255,157,.1);
+    border-color:rgba(99,255,157,.32);
+}
+
+.toggle.on::after{
+    left:23px;
+    background:var(--green);
+    box-shadow:0 0 10px rgba(99,255,157,.35);
+}
+
+/* =========================================================
+   API PANEL
+========================================================= */
+
+.apiInput{
+    width:100%;
+    height:48px;
+    border:1px solid #25332f;
+    border-radius:12px;
+    outline:none;
+    background:#05090d;
+    color:#e4efe9;
+    padding:0 14px;
+    font:12px ui-monospace,monospace;
+}
+
+.apiInput:focus{
+    border-color:rgba(99,255,157,.35);
+}
+
+.apiActions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+}
+
+.primarySmall{
+    border:0;
+    border-radius:9px;
+    background:var(--green);
+    color:#031008;
+    font-size:10px;
+    font-weight:900;
+    padding:10px 13px;
+    cursor:pointer;
+}
+
+.secondarySmall{
+    border:1px solid #293733;
+    border-radius:9px;
+    background:#0d1413;
+    color:#8d9b96;
+    font-size:10px;
+    font-weight:800;
+    padding:10px 13px;
+    cursor:pointer;
+}
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+.historyList{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.historyItem{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:13px;
+    border:1px solid rgba(255,255,255,.04);
+    border-radius:11px;
+    background:rgba(255,255,255,.012);
+    cursor:pointer;
+    transition:.2s;
+}
+
+.historyItem:hover{
+    border-color:rgba(99,255,157,.13);
+    background:rgba(99,255,157,.02);
+    transform:translateX(3px);
+}
+
+.historyIcon{
+    width:31px;
+    height:31px;
+    border-radius:8px;
+    background:rgba(99,255,157,.05);
+    color:var(--green);
+    display:grid;
+    place-items:center;
+    font-size:13px;
+}
+
+.historyText{
+    min-width:0;
+}
+
+.historyText strong{
+    display:block;
+    font-size:11px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.historyText span{
+    color:#56615e;
+    font-size:9px;
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+#toastContainer{
+    position:fixed;
+    right:22px;
+    bottom:22px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    z-index:5000;
+}
+
+.toast{
+    min-width:230px;
+    max-width:330px;
+    padding:12px 14px;
+    border:1px solid rgba(99,255,157,.14);
+    border-radius:11px;
+    background:rgba(8,13,18,.94);
+    backdrop-filter:blur(15px);
+    box-shadow:0 15px 50px rgba(0,0,0,.4);
+    font-size:11px;
+    color:#b8c5bf;
+    animation:
+        toastIn .3s ease,
+        toastOut .3s ease 2.7s forwards;
+}
+
+@keyframes toastIn{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+
+    to{
+        opacity:1;
+        transform:none;
+    }
+}
+
+@keyframes toastOut{
+    to{
+        opacity:0;
+        transform:translateY(10px);
+    }
+}
+
+.toast.success{
+    border-color:rgba(99,255,157,.25);
+}
+
+.toast.error{
+    border-color:rgba(255,85,112,.25);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+.mobileMenu{
+    display:none;
+}
+
+@media(max-width:850px){
+
+    .sidebar{
+        transform:translateX(-100%);
+    }
+
+    .sidebar.mobileOpen{
+        transform:translateX(0);
+    }
+
+    .main{
+        margin-left:0 !important;
+    }
+
+    .mobileMenu{
+        display:block;
+    }
+
+    .topbar{
+        padding:0 17px;
+    }
+
+    .content{
+        width:94%;
+        padding-top:35px;
+    }
+
+    .controlRow{
         grid-template-columns:1fr;
     }
 
-    .card{
-        padding:16px;
+    .hero h1{
+        letter-spacing:-2px;
     }
 
-    header{
-        padding:0 4%;
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media(prefers-reduced-motion:reduce){
+
+    *,
+    *::before,
+    *::after{
+        animation-duration:.01ms !important;
+        animation-iteration-count:1 !important;
+        scroll-behavior:auto !important;
     }
 }
 </style>
@@ -274,240 +1302,1259 @@ footer{
 
 <body>
 
-<header>
-    <div class="logo">
-        <div class="logoIcon">⌁</div>
-        Bookmarklet AI
-    </div>
-
-    <div class="badge">
-        BOOKMARKLETS ONLY
-    </div>
-</header>
+<canvas id="particles"></canvas>
 
 
-<main>
+<!-- =======================================================
+     BOOT SCREEN
+======================================================= -->
 
-<section class="hero">
-    <h1>
-        Build a <span>Bookmarklet.</span>
-    </h1>
+<div id="bootScreen">
 
-    <p>
-        Describe what you want and Groq generates one ready-to-use bookmarklet.
-    </p>
-</section>
+    <div class="bootBox">
 
-
-<section class="card">
-
-    <label for="requestInput">
-        What should the bookmarklet do?
-    </label>
-
-    <textarea
-        id="requestInput"
-        placeholder="Example: Make a bookmarklet that adds a draggable dark-mode button to any website."
-    ></textarea>
-
-
-    <div class="row">
-
-        <input
-            id="apiKeyInput"
-            type="password"
-            placeholder="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"
-        >
-
-        <button id="generateButton">
-            Generate Bookmarklet
-        </button>
-
-    </div>
-
-
-    <div class="hint">
-
-        <strong>GROQ API KEY LOCATION:</strong><br><br>
-
-        Find this line near the bottom of this file:
-
-        <br><br>
-
-        <code>
-            const GROQ_API_KEY = "";
-        </code>
-
-        <br><br>
-
-        Put your Groq key between the quotation marks:
-
-        <br><br>
-
-        <code>
-            const GROQ_API_KEY = "gsk_your_key_here";
-        </code>
-
-        <br><br>
-
-        You can also use the box above instead.
-
-        <br><br>
-
-        ⚠️ A key placed directly in a GitHub Pages file is public.
-        Anyone who can view the source can see it.
-    </div>
-
-
-    <div id="output" class="output">
-
-        <div id="status" class="status">
+        <div class="bootLogo">
+            ⌁
         </div>
 
-        <div class="codeWrap">
+        <div class="bootTitle">
+            BOOKMARKLET AI
+        </div>
+
+        <div class="bootSubtitle">
+            Initializing browser automation engine...
+        </div>
+
+        <div class="bootBar">
+            <div class="bootFill"></div>
+        </div>
+
+        <div
+            id="bootStatus"
+            class="bootStatus"
+        >
+            loading interface...
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =======================================================
+     APPLICATION
+======================================================= -->
+
+<div id="app">
+
+
+<!-- =======================================================
+     SIDEBAR
+======================================================= -->
+
+<aside id="sidebar" class="sidebar">
+
+    <div class="sidebarInner">
+
+        <div class="brand">
+
+            <div class="brandIcon">
+                ⌁
+            </div>
+
+            <div class="brandText">
+
+                <strong>
+                    Bookmarklet AI
+                </strong>
+
+                <span>
+                    Groq generation engine
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="nav">
 
             <button
-                id="copyButton"
-                class="copyButton"
+                class="navButton active"
+                data-panel="generator"
             >
-                Copy
+
+                <span class="navIcon">⚡</span>
+
+                <span class="navText">
+                    Generator
+                </span>
+
             </button>
 
-            <pre id="bookmarkletCode"></pre>
+
+            <button
+                class="navButton"
+                data-panel="history"
+            >
+
+                <span class="navIcon">◷</span>
+
+                <span class="navText">
+                    History
+                </span>
+
+            </button>
+
+
+            <button
+                class="navButton"
+                data-panel="api"
+            >
+
+                <span class="navIcon">🔑</span>
+
+                <span class="navText">
+                    API Key
+                </span>
+
+            </button>
+
+
+            <button
+                class="navButton"
+                data-panel="settings"
+            >
+
+                <span class="navIcon">⚙</span>
+
+                <span class="navText">
+                    Settings
+                </span>
+
+            </button>
+
+        </nav>
+
+
+        <div class="sidebarBottom">
+
+            <div class="sidebarFooter">
+                Bookmarklets only.<br>
+                No explanations in generated output.
+            </div>
 
         </div>
 
     </div>
 
-</section>
+
+    <button
+        id="collapseButton"
+        class="collapseButton"
+    >
+        ‹
+    </button>
+
+</aside>
 
 
-<footer>
-    Bookmarklet AI • Groq powered • GitHub Pages
-</footer>
+<!-- =======================================================
+     MAIN
+======================================================= -->
 
-</main>
+<div class="main">
+
+
+    <header class="topbar">
+
+        <div class="topTitle">
+
+            <button
+                id="mobileMenu"
+                class="iconButton mobileMenu"
+            >
+                ☰
+            </button>
+
+            <span class="liveDot"></span>
+
+            <span>
+                BOOKMARKLET GENERATION ONLINE
+            </span>
+
+        </div>
+
+
+        <div class="topActions">
+
+            <button
+                class="iconButton"
+                id="clearButton"
+                title="Clear"
+            >
+                ×
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <main class="content">
+
+
+        <!-- =================================================
+             GENERATOR PANEL
+        ================================================= -->
+
+        <section
+            id="panel-generator"
+            class="panel active"
+        >
+
+            <div class="hero">
+
+                <div class="heroEyebrow">
+                    <span>●</span>
+                    GROQ POWERED
+                </div>
+
+                <h1>
+                    Build a
+                    <span>Bookmarklet.</span>
+                </h1>
+
+                <p>
+                    Describe exactly what you want the browser
+                    bookmarklet to do. The generator returns
+                    only executable bookmarklet code.
+                </p>
+
+            </div>
+
+
+            <section class="generator">
+
+                <div class="generatorHeader">
+
+                    <div class="generatorTitle">
+
+                        Bookmarklet Generator
+
+                        <small>
+                            Turn natural language into browser automation
+                        </small>
+
+                    </div>
+
+                    <div class="engineBadge">
+
+                        <span class="liveDot"></span>
+
+                        GROQ ONLINE
+
+                    </div>
+
+                </div>
+
+
+                <div class="generatorBody">
+
+                    <label>
+                        Your request
+                    </label>
+
+
+                    <textarea
+                        id="requestInput"
+                        placeholder="Example: Create a bookmarklet that adds a floating neon control panel to the current website with buttons for dark mode, scrolling to the top, and removing it."
+                    ></textarea>
+
+
+                    <div class="controlRow">
+
+                        <div class="keyInput">
+
+                            <input
+                                id="temporaryKey"
+                                type="password"
+                                placeholder="Optional temporary Groq API key"
+                            >
+
+                        </div>
+
+
+                        <button
+                            id="generateButton"
+                            class="generateButton"
+                        >
+                            ✦ Generate Bookmarklet
+                        </button>
+
+                    </div>
+
+
+                    <div class="infoLine">
+
+                        <span>
+                            Your configured key is stored in this file.
+                        </span>
+
+                        <span class="shortcut">
+                            Generate:
+                            <kbd>CTRL</kbd>
+                            +
+                            <kbd>ENTER</kbd>
+                        </span>
+
+                    </div>
+
+
+                    <!-- LOADING -->
+
+                    <div
+                        id="loadingBox"
+                        class="loadingBox"
+                    >
+
+                        <div class="loadingTop">
+
+                            <span class="loadingLabel">
+                                GENERATING BOOKMARKLET
+                            </span>
+
+                            <span
+                                id="loadingPercent"
+                                class="loadingPercent"
+                            >
+                                0%
+                            </span>
+
+                        </div>
+
+
+                        <div class="loadingTrack">
+
+                            <div
+                                id="loadingProgress"
+                                class="loadingProgress"
+                            ></div>
+
+                        </div>
+
+
+                        <div
+                            id="loadingStatus"
+                            class="loadingStatus"
+                        >
+                            contacting Groq...
+                        </div>
+
+                    </div>
+
+
+                    <!-- OUTPUT -->
+
+                    <div
+                        id="output"
+                        class="output"
+                    >
+
+                        <div class="outputHeader">
+
+                            <div class="outputTitle">
+
+                                <span class="successDot"></span>
+
+                                Generated Bookmarklet
+
+                            </div>
+
+
+                            <div class="outputActions">
+
+                                <button
+                                    id="copyButton"
+                                    class="smallButton"
+                                >
+                                    Copy
+                                </button>
+
+                                <button
+                                    id="runButton"
+                                    class="smallButton"
+                                >
+                                    Run
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="codeBox">
+
+                            <pre
+                                id="bookmarkletCode"
+                            ></pre>
+
+                            <button
+                                id="copyMain"
+                                class="smallButton copyMain"
+                            >
+                                Copy Bookmarklet
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="emptyState"
+                        class="emptyState"
+                    >
+                        Your generated bookmarklet will appear here.
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- =================================================
+             HISTORY PANEL
+        ================================================= -->
+
+        <section
+            id="panel-history"
+            class="panel"
+        >
+
+            <div class="hero">
+
+                <div class="heroEyebrow">
+                    RECENT GENERATIONS
+                </div>
+
+                <h1>
+                    Your
+                    <span>History.</span>
+                </h1>
+
+                <p>
+                    Bookmarklets generated on this browser are
+                    remembered locally.
+                </p>
+
+            </div>
+
+
+            <div class="settingsCard">
+
+                <div class="settingsTitle">
+                    Generation History
+                </div>
+
+                <div class="settingsDescription">
+                    Click an item to restore its bookmarklet.
+                </div>
+
+                <div
+                    id="historyList"
+                    class="historyList"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             API PANEL
+        ================================================= -->
+
+        <section
+            id="panel-api"
+            class="panel"
+        >
+
+            <div class="hero">
+
+                <div class="heroEyebrow">
+                    CONFIGURATION
+                </div>
+
+                <h1>
+                    Groq
+                    <span>API.</span>
+                </h1>
+
+                <p>
+                    Configure the API key used by the generator.
+                </p>
+
+            </div>
+
+
+            <div class="settingsCard">
+
+                <div class="settingsTitle">
+                    API Key
+                </div>
+
+                <div class="settingsDescription">
+                    The hard-coded key is defined in the JavaScript
+                    section near the bottom of this file.
+                </div>
+
+
+                <label>
+                    Browser override
+                </label>
+
+                <input
+                    id="apiPanelInput"
+                    class="apiInput"
+                    type="password"
+                    placeholder="Paste a temporary Groq key"
+                >
+
+
+                <div class="apiActions">
+
+                    <button
+                        id="saveApiButton"
+                        class="primarySmall"
+                    >
+                        Save for this browser
+                    </button>
+
+                    <button
+                        id="removeApiButton"
+                        class="secondarySmall"
+                    >
+                        Clear
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SETTINGS PANEL
+        ================================================= -->
+
+        <section
+            id="panel-settings"
+            class="panel"
+        >
+
+            <div class="hero">
+
+                <div class="heroEyebrow">
+                    PERSONALIZE
+                </div>
+
+                <h1>
+                    <span>Settings.</span>
+                </h1>
+
+                <p>
+                    Customize the generator experience.
+                </p>
+
+            </div>
+
+
+            <div class="settingsCard">
+
+                <div class="settingsTitle">
+                    Interface
+                </div>
+
+                <div class="settingsDescription">
+                    These settings are saved in your browser.
+                </div>
+
+
+                <div class="setting">
+
+                    <div class="settingInfo">
+
+                        <strong>
+                            Animated particles
+                        </strong>
+
+                        <span>
+                            Floating background particles
+                        </span>
+
+                    </div>
+
+                    <button
+                        class="toggle on"
+                        data-setting="particles"
+                    ></button>
+
+                </div>
+
+
+                <div class="setting">
+
+                    <div class="settingInfo">
+
+                        <strong>
+                            Animated grid
+                        </strong>
+
+                        <span>
+                            Moving technical background grid
+                        </span>
+
+                    </div>
+
+                    <button
+                        class="toggle on"
+                        data-setting="grid"
+                    ></button>
+
+                </div>
+
+
+                <div class="setting">
+
+                    <div class="settingInfo">
+
+                        <strong>
+                            Boot animation
+                        </strong>
+
+                        <span>
+                            Show startup loading screen
+                        </span>
+
+                    </div>
+
+                    <button
+                        class="toggle on"
+                        data-setting="boot"
+                    ></button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+</div>
+
+
+<div id="toastContainer"></div>
 
 
 <script>
 
-/*
-============================================================
-                    GROQ API KEY
-============================================================
+/* =========================================================
+   GROQ CONFIG
+========================================================= */
 
-PASTE YOUR GROQ API KEY HERE.
+/*
+=============================================================
+             🔑 PASTE YOUR GROQ API KEY HERE
+=============================================================
 
 Example:
 
-const GROQ_API_KEY = "gsk_xxxxxxxxxxxxxxxxxxxxx";
+const GROQ_API_KEY = "gsk_xxxxxxxxxxxxxxxxx";
 
 WARNING:
-Because this is a GitHub Pages/static website, a key stored
-here becomes visible to anyone who can inspect the source.
+A key stored in a public GitHub Pages repository is visible
+to anyone who views the source code.
 
-============================================================
+=============================================================
 */
 
 const GROQ_API_KEY = "";
 
 
 /*
-============================================================
-                    GROQ MODEL
-============================================================
-
-Current Groq production model selected for generation.
-
-============================================================
+=============================================================
+                       MODEL
+=============================================================
 */
 
 const GROQ_MODEL = "openai/gpt-oss-120b";
 
 
 /*
-============================================================
-                    GROQ ENDPOINT
-============================================================
+=============================================================
+                       ENDPOINT
+=============================================================
 */
 
 const GROQ_ENDPOINT =
     "https://api.groq.com/openai/v1/chat/completions";
 
 
-/*
-============================================================
-                    DOM ELEMENTS
-============================================================
-*/
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const sidebar =
+    document.getElementById("sidebar");
+
+const collapseButton =
+    document.getElementById("collapseButton");
+
+const mobileMenu =
+    document.getElementById("mobileMenu");
+
+const app =
+    document.getElementById("app");
+
+const bootScreen =
+    document.getElementById("bootScreen");
+
+const bootStatus =
+    document.getElementById("bootStatus");
 
 const requestInput =
     document.getElementById("requestInput");
 
-const apiKeyInput =
-    document.getElementById("apiKeyInput");
+const temporaryKey =
+    document.getElementById("temporaryKey");
 
 const generateButton =
     document.getElementById("generateButton");
 
+const loadingBox =
+    document.getElementById("loadingBox");
+
+const loadingProgress =
+    document.getElementById("loadingProgress");
+
+const loadingPercent =
+    document.getElementById("loadingPercent");
+
+const loadingStatus =
+    document.getElementById("loadingStatus");
+
 const output =
     document.getElementById("output");
-
-const statusText =
-    document.getElementById("status");
 
 const bookmarkletCode =
     document.getElementById("bookmarkletCode");
 
+const emptyState =
+    document.getElementById("emptyState");
+
 const copyButton =
     document.getElementById("copyButton");
 
+const copyMain =
+    document.getElementById("copyMain");
 
-/*
-============================================================
-                  CLEAN BOOKMARKLET
-============================================================
-*/
+const runButton =
+    document.getElementById("runButton");
+
+const toastContainer =
+    document.getElementById("toastContainer");
+
+const historyList =
+    document.getElementById("historyList");
+
+const apiPanelInput =
+    document.getElementById("apiPanelInput");
+
+const saveApiButton =
+    document.getElementById("saveApiButton");
+
+const removeApiButton =
+    document.getElementById("removeApiButton");
+
+const clearButton =
+    document.getElementById("clearButton");
+
+
+/* =========================================================
+   BOOT SCREEN
+========================================================= */
+
+const bootMessages = [
+    "loading interface...",
+    "initializing generator...",
+    "connecting browser engine...",
+    "loading workspace...",
+    "ready."
+];
+
+let bootIndex = 0;
+
+const bootTimer =
+    setInterval(
+        ()=>{
+            if(
+                bootIndex <
+                bootMessages.length
+            ){
+
+                bootStatus.textContent =
+                    bootMessages[bootIndex];
+
+                bootIndex++;
+
+            }
+        },
+        430
+    );
+
+
+setTimeout(
+    ()=>{
+        clearInterval(bootTimer);
+
+        bootStatus.textContent =
+            "ready.";
+
+        setTimeout(
+            ()=>{
+                bootScreen.classList.add("hidden");
+                app.classList.add("ready");
+            },
+            300
+        );
+    },
+    2350
+);
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+const canvas =
+    document.getElementById("particles");
+
+const ctx =
+    canvas.getContext("2d");
+
+let particleEnabled = true;
+
+let particles = [];
+
+function resizeCanvas(){
+
+    canvas.width =
+        window.innerWidth *
+        devicePixelRatio;
+
+    canvas.height =
+        window.innerHeight *
+        devicePixelRatio;
+
+    canvas.style.width =
+        window.innerWidth + "px";
+
+    canvas.style.height =
+        window.innerHeight + "px";
+
+    ctx.setTransform(
+        devicePixelRatio,
+        0,
+        0,
+        devicePixelRatio,
+        0,
+        0
+    );
+
+}
+
+function createParticles(){
+
+    particles = [];
+
+    const count =
+        Math.min(
+            85,
+            Math.floor(
+                window.innerWidth /
+                16
+            )
+        );
+
+    for(let i=0;i<count;i++){
+
+        particles.push({
+
+            x:
+                Math.random() *
+                window.innerWidth,
+
+            y:
+                Math.random() *
+                window.innerHeight,
+
+            vx:
+                (Math.random()-.5)
+                * .25,
+
+            vy:
+                (Math.random()-.5)
+                * .25,
+
+            size:
+                Math.random() * 1.8 +
+                .3,
+
+            alpha:
+                Math.random() * .5 +
+                .1
+
+        });
+
+    }
+
+}
+
+function drawParticles(){
+
+    ctx.clearRect(
+        0,
+        0,
+        window.innerWidth,
+        window.innerHeight
+    );
+
+    if(!particleEnabled){
+
+        requestAnimationFrame(
+            drawParticles
+        );
+
+        return;
+
+    }
+
+    for(const p of particles){
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if(p.x < 0)
+            p.x = window.innerWidth;
+
+        if(p.x > window.innerWidth)
+            p.x = 0;
+
+        if(p.y < 0)
+            p.y = window.innerHeight;
+
+        if(p.y > window.innerHeight)
+            p.y = 0;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            p.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            "rgba(99,255,157," +
+            p.alpha +
+            ")";
+
+        ctx.fill();
+
+    }
+
+    requestAnimationFrame(
+        drawParticles
+    );
+
+}
+
+resizeCanvas();
+createParticles();
+drawParticles();
+
+window.addEventListener(
+    "resize",
+    ()=>{
+        resizeCanvas();
+        createParticles();
+    }
+);
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+collapseButton.addEventListener(
+    "click",
+    ()=>{
+        sidebar.classList.toggle(
+            "collapsed"
+        );
+
+        localStorage.setItem(
+            "bookmarklet-sidebar",
+            sidebar.classList.contains(
+                "collapsed"
+            )
+            ? "collapsed"
+            : "open"
+        );
+    }
+);
+
+
+if(
+    localStorage.getItem(
+        "bookmarklet-sidebar"
+    ) === "collapsed"
+){
+
+    sidebar.classList.add(
+        "collapsed"
+    );
+
+}
+
+
+mobileMenu.addEventListener(
+    "click",
+    ()=>{
+        sidebar.classList.toggle(
+            "mobileOpen"
+        );
+    }
+);
+
+
+/* =========================================================
+   PANELS
+========================================================= */
+
+const navButtons =
+    document.querySelectorAll(
+        ".navButton"
+    );
+
+const panels =
+    document.querySelectorAll(
+        ".panel"
+    );
+
+
+navButtons.forEach(
+    button=>{
+
+        button.addEventListener(
+            "click",
+            ()=>{
+
+                const target =
+                    button.dataset.panel;
+
+
+                navButtons.forEach(
+                    b=>{
+                        b.classList.remove(
+                            "active"
+                        );
+                    }
+                );
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                panels.forEach(
+                    panel=>{
+                        panel.classList.remove(
+                            "active"
+                        );
+                    }
+                );
+
+
+                document
+                    .getElementById(
+                        "panel-" + target
+                    )
+                    .classList.add(
+                        "active"
+                    );
+
+
+                sidebar.classList.remove(
+                    "mobileOpen"
+                );
+
+                if(
+                    target === "history"
+                ){
+                    renderHistory();
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   API KEY STORAGE
+========================================================= */
+
+function getStoredKey(){
+
+    return localStorage.getItem(
+        "bookmarklet-groq-key"
+    ) || "";
+
+}
+
+
+function getActiveKey(){
+
+    return (
+        getStoredKey() ||
+        temporaryKey.value.trim() ||
+        GROQ_API_KEY.trim()
+    );
+
+}
+
+
+apiPanelInput.value =
+    getStoredKey();
+
+
+saveApiButton.addEventListener(
+    "click",
+    ()=>{
+
+        const key =
+            apiPanelInput.value.trim();
+
+
+        if(!key){
+
+            toast(
+                "Enter a Groq API key first.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        localStorage.setItem(
+            "bookmarklet-groq-key",
+            key
+        );
+
+
+        toast(
+            "Groq API key saved locally.",
+            "success"
+        );
+
+    }
+);
+
+
+removeApiButton.addEventListener(
+    "click",
+    ()=>{
+
+        localStorage.removeItem(
+            "bookmarklet-groq-key"
+        );
+
+        apiPanelInput.value =
+            "";
+
+        toast(
+            "Saved API key cleared.",
+            "success"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   CLEAN BOOKMARKLET
+========================================================= */
 
 function cleanBookmarklet(text){
 
-    text = String(text || "")
+    text =
+        String(text || "")
         .trim();
 
 
-    /*
-    Remove markdown fences.
-    */
-
-    text = text
-        .replace(/^```javascript\s*/i,"")
-        .replace(/^```js\s*/i,"")
-        .replace(/^```\s*/i,"")
-        .replace(/\s*```$/,"")
+    text =
+        text
+        .replace(
+            /^```javascript\s*/i,
+            ""
+        )
+        .replace(
+            /^```js\s*/i,
+            ""
+        )
+        .replace(
+            /^```\s*/i,
+            ""
+        )
+        .replace(
+            /\s*```$/i,
+            ""
+        )
         .trim();
 
 
-    /*
-    Find javascript:
-    */
-
-    const position =
-        text.search(/javascript\s*:/i);
+    const index =
+        text.search(
+            /javascript\s*:/i
+        );
 
 
-    if(position !== -1){
+    if(index >= 0){
 
         text =
-            text.slice(position);
+            text.slice(index);
 
     }
 
 
-    /*
-    Guarantee bookmarklet prefix.
-    */
-
-    if(!/^javascript:/i.test(text)){
+    if(
+        !/^javascript:/i.test(text)
+    ){
 
         text =
             "javascript:(()=>{" +
@@ -517,12 +2564,11 @@ function cleanBookmarklet(text){
     }
 
 
-    /*
-    Remove line breaks.
-    */
-
     text =
-        text.replace(/\r?\n/g," ");
+        text.replace(
+            /\r?\n/g,
+            " "
+        );
 
 
     return text.trim();
@@ -530,41 +2576,35 @@ function cleanBookmarklet(text){
 }
 
 
-/*
-============================================================
-                    GROQ GENERATOR
-============================================================
-*/
+/* =========================================================
+   GROQ GENERATOR
+========================================================= */
 
 async function generateWithGroq(
-    userRequest,
+    prompt,
     key
 ){
 
-    const systemPrompt = `You are a bookmarklet generator.
+    const systemPrompt = `
+You generate browser bookmarklets.
 
-YOUR OUTPUT RULES ARE EXTREMELY STRICT:
+Return EXACTLY ONE bookmarklet.
 
-- Return ONLY ONE bookmarklet.
-- The result MUST begin with javascript:
-- NEVER provide an explanation.
-- NEVER provide markdown.
-- NEVER use code fences.
-- NEVER provide multiple choices.
-- NEVER provide commentary before or after the bookmarklet.
-- NEVER say "here is your bookmarklet".
-- The response must be directly pasteable into a browser bookmark.
-- Use a self-contained JavaScript IIFE whenever practical.
-- Make the bookmarklet operate on the current webpage.
+Rules:
+- It must begin with javascript:
+- No markdown.
+- No code fences.
+- No explanation.
+- No multiple options.
+- No prose.
+- No quotes around the answer.
+- Use a self-contained IIFE.
+- Make it work on the current webpage.
 - Do not require external packages.
-- Do not use server-side code.
-- Keep the bookmarklet functional and reasonably compact.
-- Do not create malware, credential theft, phishing, destructive attacks, or security bypasses.
-
-The user's requested functionality is the ONLY thing you should implement.
-
-RETURN ONLY THE BOOKMARKLET.`;
-
+- Return only the bookmarklet code.
+- Do not create malware, phishing, credential theft,
+destructive attacks, or security bypasses.
+`;
 
 
     const response =
@@ -585,7 +2625,7 @@ RETURN ONLY THE BOOKMARKLET.`;
 
                     model:GROQ_MODEL,
 
-                    temperature:0.15,
+                    temperature:.1,
 
                     max_tokens:3000,
 
@@ -593,17 +2633,19 @@ RETURN ONLY THE BOOKMARKLET.`;
 
                         {
                             role:"system",
-                            content:systemPrompt
+                            content:
+                                systemPrompt
                         },
 
                         {
                             role:"user",
-                            content:userRequest
+                            content:prompt
                         }
 
                     ]
 
                 })
+
             }
         );
 
@@ -616,16 +2658,14 @@ RETURN ONLY THE BOOKMARKLET.`;
             details =
                 await response.text();
         }
-        catch(error){
-            details = "";
-        }
+        catch(error){}
 
 
         throw new Error(
             "Groq request failed (" +
             response.status +
             "). " +
-            details.slice(0,220)
+            details.slice(0,300)
         );
 
     }
@@ -648,126 +2688,388 @@ RETURN ONLY THE BOOKMARKLET.`;
     }
 
 
-    return cleanBookmarklet(content);
+    return cleanBookmarklet(
+        content
+    );
 
 }
 
 
-/*
-============================================================
-                    DEMO MODE
-============================================================
+/* =========================================================
+   LOADING ANIMATION
+========================================================= */
 
-Used only if you don't provide a key.
-============================================================
-*/
+let loadingInterval = null;
 
-function demoBookmarklet(prompt){
+function startLoading(){
 
-    const text =
-        prompt.toLowerCase();
+    loadingBox.classList.add(
+        "show"
+    );
 
 
-    /*
-    DARK MODE
-    */
-
-    if(
-        text.includes("dark mode")
-    ){
-
-        return `javascript:(()=>{let s=document.getElementById('bookmarklet-ai-dark');if(s){s.remove();return;}s=document.createElement('style');s.id='bookmarklet-ai-dark';s.textContent='html{filter:invert(1) hue-rotate(180deg)!important}img,video,iframe,canvas{filter:invert(1) hue-rotate(180deg)!important}';document.head.appendChild(s)})()`;
-
-    }
+    let progress = 0;
 
 
-    /*
-    SCROLL TO TOP
-    */
-
-    if(
-        text.includes("scroll") &&
-        text.includes("top")
-    ){
-
-        return `javascript:(()=>window.scrollTo({top:0,behavior:'smooth'}))()`;
-
-    }
+    const messages = [
+        "building prompt...",
+        "contacting Groq...",
+        "generating JavaScript...",
+        "compressing bookmarklet...",
+        "validating output...",
+        "finishing..."
+    ];
 
 
-    /*
-    SCROLL TO BOTTOM
-    */
+    loadingInterval =
+        setInterval(
+            ()=>{
 
-    if(
-        text.includes("scroll") &&
-        text.includes("bottom")
-    ){
-
-        return `javascript:(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'}))()`;
-
-    }
+                progress +=
+                    Math.random() *
+                    8 +
+                    2;
 
 
-    /*
-    HIGHLIGHT LINKS
-    */
-
-    if(
-        text.includes("highlight") &&
-        text.includes("link")
-    ){
-
-        return `javascript:(()=>{document.querySelectorAll('a').forEach(a=>a.style.outline='2px solid #00ff66')})()`;
-
-    }
+                if(progress > 92)
+                    progress = 92;
 
 
-    /*
-    FALLBACK
-    */
+                loadingProgress.style.width =
+                    progress + "%";
 
-    return `javascript:(()=>{alert("Add your Groq API key to index.html to enable AI bookmarklet generation.")})()`;
+                loadingPercent.textContent =
+                    Math.floor(progress) +
+                    "%";
+
+
+                const index =
+                    Math.min(
+                        messages.length - 1,
+                        Math.floor(
+                            progress /
+                            17
+                        )
+                    );
+
+
+                loadingStatus.textContent =
+                    messages[index];
+
+            },
+            180
+        );
 
 }
 
 
-/*
-============================================================
-                  GENERATE BUTTON
-============================================================
-*/
+function finishLoading(){
+
+    clearInterval(
+        loadingInterval
+    );
+
+
+    loadingProgress.style.width =
+        "100%";
+
+    loadingPercent.textContent =
+        "100%";
+
+    loadingStatus.textContent =
+        "bookmarklet ready";
+
+
+    setTimeout(
+        ()=>{
+            loadingBox.classList.remove(
+                "show"
+            );
+        },
+        500
+    );
+
+}
+
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+function getHistory(){
+
+    try{
+
+        return JSON.parse(
+            localStorage.getItem(
+                "bookmarklet-history"
+            ) || "[]"
+        );
+
+    }
+    catch(error){
+
+        return [];
+
+    }
+
+}
+
+
+function saveHistory(
+    prompt,
+    bookmarklet
+){
+
+    const history =
+        getHistory();
+
+
+    history.unshift({
+
+        prompt:
+            prompt.slice(
+                0,
+                160
+            ),
+
+        bookmarklet,
+
+        time:
+            Date.now()
+
+    });
+
+
+    const limited =
+        history.slice(
+            0,
+            30
+        );
+
+
+    localStorage.setItem(
+        "bookmarklet-history",
+        JSON.stringify(
+            limited
+        )
+    );
+
+}
+
+
+function renderHistory(){
+
+    const history =
+        getHistory();
+
+
+    if(!history.length){
+
+        historyList.innerHTML =
+            `
+            <div class="emptyState">
+                No bookmarklets generated yet.
+            </div>
+            `;
+
+        return;
+
+    }
+
+
+    historyList.innerHTML =
+        "";
+
+
+    history.forEach(
+        (item,index)=>{
+
+            const element =
+                document.createElement(
+                    "div"
+                );
+
+
+            element.className =
+                "historyItem";
+
+
+            const date =
+                new Date(
+                    item.time
+                );
+
+
+            element.innerHTML =
+
+                `
+                <div class="historyIcon">
+                    ${index + 1}
+                </div>
+
+                <div class="historyText">
+
+                    <strong>
+                        ${escapeHtml(
+                            item.prompt
+                        )}
+                    </strong>
+
+                    <span>
+                        ${date.toLocaleString()}
+                    </span>
+
+                </div>
+                `;
+
+
+            element.addEventListener(
+                "click",
+                ()=>{
+                    bookmarkletCode.textContent =
+                        item.bookmarklet;
+
+                    output.classList.add(
+                        "show"
+                    );
+
+                    emptyState.style.display =
+                        "none";
+
+
+                    document
+                        .querySelector(
+                            '[data-panel="generator"]'
+                        )
+                        .click();
+
+
+                    toast(
+                        "Bookmarklet restored.",
+                        "success"
+                    );
+
+                }
+            );
+
+
+            historyList.appendChild(
+                element
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(text){
+
+    return String(text)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function toast(
+    message,
+    type="success"
+){
+
+    const item =
+        document.createElement(
+            "div"
+        );
+
+
+    item.className =
+        "toast " +
+        type;
+
+
+    item.textContent =
+        message;
+
+
+    toastContainer.appendChild(
+        item
+    );
+
+
+    setTimeout(
+        ()=>{
+            item.remove();
+        },
+        3100
+    );
+
+}
+
+
+/* =========================================================
+   GENERATE
+========================================================= */
 
 generateButton.addEventListener(
     "click",
-    async function(){
+    async()=>{
 
         const prompt =
             requestInput.value.trim();
 
 
-        /*
-        API key from the page first.
-        Then API key hard-coded into this file.
-        */
-
         const key =
-            apiKeyInput.value.trim() ||
-            GROQ_API_KEY.trim();
-
-
-        output.classList.add("show");
+            getActiveKey();
 
 
         if(!prompt){
 
-            statusText.textContent =
-                "Enter a bookmarklet request first.";
-
-            bookmarkletCode.textContent =
-                "";
+            toast(
+                "Describe what you want first.",
+                "error"
+            );
 
             requestInput.focus();
+
+            return;
+
+        }
+
+
+        if(!key){
+
+            toast(
+                "Add your Groq API key in the API Key panel or in the code.",
+                "error"
+            );
 
             return;
 
@@ -777,82 +3079,83 @@ generateButton.addEventListener(
         generateButton.disabled =
             true;
 
+
         generateButton.textContent =
             "Generating...";
 
 
-        statusText.textContent =
-            "Groq is generating your bookmarklet...";
+        output.classList.remove(
+            "show"
+        );
+
+
+        emptyState.style.display =
+            "none";
 
 
         bookmarkletCode.textContent =
             "";
 
 
+        startLoading();
+
+
         try{
 
-            let result;
-
-
-            /*
-            Real Groq generation
-            */
-
-            if(key){
-
-                result =
-                    await generateWithGroq(
-                        prompt,
-                        key
-                    );
-
-
-                statusText.textContent =
-                    "Generated with Groq";
-
-            }
-
-
-            /*
-            Demo mode
-            */
-
-            else{
-
-                result =
-                    demoBookmarklet(prompt);
-
-
-                statusText.textContent =
-                    "Demo mode — add your Groq API key";
-
-            }
+            const result =
+                await generateWithGroq(
+                    prompt,
+                    key
+                );
 
 
             bookmarkletCode.textContent =
                 result;
+
+
+            output.classList.add(
+                "show"
+            );
+
+
+            saveHistory(
+                prompt,
+                result
+            );
+
+
+            toast(
+                "Bookmarklet generated successfully.",
+                "success"
+            );
 
         }
 
 
         catch(error){
 
-            statusText.textContent =
-                error.message;
+            emptyState.style.display =
+                "block";
 
-            bookmarkletCode.textContent =
-                "";
+
+            toast(
+                error.message,
+                "error"
+            );
 
         }
 
 
         finally{
 
+            finishLoading();
+
+
             generateButton.disabled =
                 false;
 
             generateButton.textContent =
-                "Generate Bookmarklet";
+                "✦ Generate Bookmarklet";
 
         }
 
@@ -860,21 +3163,125 @@ generateButton.addEventListener(
 );
 
 
-/*
-============================================================
-                    COPY BUTTON
-============================================================
-*/
+/* =========================================================
+   COPY
+========================================================= */
+
+async function copyBookmarklet(){
+
+    const text =
+        bookmarkletCode.textContent.trim();
+
+
+    if(!text){
+
+        toast(
+            "There is no bookmarklet to copy.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        await navigator.clipboard.writeText(
+            text
+        );
+
+    }
+
+    catch(error){
+
+        const temporary =
+            document.createElement(
+                "textarea"
+            );
+
+
+        temporary.value =
+            text;
+
+        temporary.style.position =
+            "fixed";
+
+        temporary.style.opacity =
+            "0";
+
+
+        document.body.appendChild(
+            temporary
+        );
+
+
+        temporary.focus();
+
+        temporary.select();
+
+        document.execCommand(
+            "copy"
+        );
+
+        temporary.remove();
+
+    }
+
+
+    toast(
+        "Bookmarklet copied to clipboard.",
+        "success"
+    );
+
+}
+
 
 copyButton.addEventListener(
     "click",
-    async function(){
+    copyBookmarklet
+);
 
-        const text =
+copyMain.addEventListener(
+    "click",
+    copyBookmarklet
+);
+
+
+/* =========================================================
+   RUN
+========================================================= */
+
+runButton.addEventListener(
+    "click",
+    ()=>{
+
+        const bookmarklet =
             bookmarkletCode.textContent.trim();
 
 
-        if(!text){
+        if(!bookmarklet){
+
+            toast(
+                "Generate a bookmarklet first.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        if(
+            !/^javascript:/i.test(
+                bookmarklet
+            )
+        ){
+
+            toast(
+                "Invalid bookmarklet.",
+                "error"
+            );
 
             return;
 
@@ -883,82 +3290,84 @@ copyButton.addEventListener(
 
         try{
 
-            await navigator.clipboard.writeText(
-                text
-            );
+            const code =
+                bookmarklet.replace(
+                    /^javascript:/i,
+                    ""
+                );
+
+
+            /*
+            Execute generated bookmarklet
+            in the current page.
+            */
+
+            Function(
+                code
+            )();
 
         }
 
         catch(error){
 
-            const textarea =
-                document.createElement("textarea");
-
-
-            textarea.value =
-                text;
-
-
-            textarea.style.position =
-                "fixed";
-
-
-            textarea.style.opacity =
-                "0";
-
-
-            document.body.appendChild(
-                textarea
+            toast(
+                "Bookmarklet error: " +
+                error.message,
+                "error"
             );
-
-
-            textarea.focus();
-
-            textarea.select();
-
-
-            document.execCommand(
-                "copy"
-            );
-
-
-            textarea.remove();
 
         }
 
+    }
+);
 
-        copyButton.textContent =
-            "Copied!";
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+clearButton.addEventListener(
+    "click",
+    ()=>{
+
+        requestInput.value =
+            "";
+
+        bookmarkletCode.textContent =
+            "";
+
+        output.classList.remove(
+            "show"
+        );
+
+        emptyState.style.display =
+            "block";
 
 
-        setTimeout(
-            function(){
-
-                copyButton.textContent =
-                    "Copy";
-
-            },
-            1200
+        toast(
+            "Workspace cleared.",
+            "success"
         );
 
     }
 );
 
 
-/*
-============================================================
-                  CTRL + ENTER
-============================================================
-*/
+/* =========================================================
+   CTRL + ENTER
+========================================================= */
 
 requestInput.addEventListener(
     "keydown",
-    function(event){
+    event=>{
 
         if(
-            (event.ctrlKey || event.metaKey) &&
+            (event.ctrlKey ||
+             event.metaKey) &&
             event.key === "Enter"
         ){
+
+            event.preventDefault();
 
             generateButton.click();
 
@@ -966,6 +3375,176 @@ requestInput.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   SETTINGS TOGGLES
+========================================================= */
+
+const toggles =
+    document.querySelectorAll(
+        ".toggle"
+    );
+
+
+function getSetting(
+    name,
+    fallback=true
+){
+
+    const value =
+        localStorage.getItem(
+            "setting-" + name
+        );
+
+
+    if(value === null)
+        return fallback;
+
+
+    return value === "true";
+
+}
+
+
+function applySettings(){
+
+    particleEnabled =
+        getSetting(
+            "particles",
+            true
+        );
+
+
+    const gridEnabled =
+        getSetting(
+            "grid",
+            true
+        );
+
+
+    document.body.style.setProperty(
+        "--grid-opacity",
+        gridEnabled ? ".25" : "0"
+    );
+
+
+    document.body.classList.toggle(
+        "noGrid",
+        !gridEnabled
+    );
+
+
+    const gridStyle =
+        document.getElementById(
+            "dynamicGridStyle"
+        ) ||
+        document.createElement(
+            "style"
+        );
+
+
+    gridStyle.id =
+        "dynamicGridStyle";
+
+
+    gridStyle.textContent =
+        `
+        body::before{
+            opacity:
+                ${gridEnabled ? ".25" : "0"}
+            !important;
+        }
+        `;
+
+
+    document.head.appendChild(
+        gridStyle
+    );
+
+}
+
+
+toggles.forEach(
+    toggle=>{
+
+        const setting =
+            toggle.dataset.setting;
+
+
+        const active =
+            getSetting(
+                setting,
+                true
+            );
+
+
+        toggle.classList.toggle(
+            "on",
+            active
+        );
+
+
+        toggle.addEventListener(
+            "click",
+            ()=>{
+
+                const next =
+                    !toggle.classList.contains(
+                        "on"
+                    );
+
+
+                toggle.classList.toggle(
+                    "on",
+                    next
+                );
+
+
+                localStorage.setItem(
+                    "setting-" + setting,
+                    String(next)
+                );
+
+
+                applySettings();
+
+            }
+        );
+
+    }
+);
+
+
+applySettings();
+
+
+/* =========================================================
+   BOOT SETTING
+========================================================= */
+
+if(
+    !getSetting(
+        "boot",
+        true
+    )
+){
+
+    bootScreen.style.display =
+        "none";
+
+    app.classList.add(
+        "ready"
+    );
+
+}
+
+
+/* =========================================================
+   INITIAL HISTORY
+========================================================= */
+
+renderHistory();
 
 </script>
 
