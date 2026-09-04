@@ -10,6 +10,7 @@ Bookmarklet AI is a simple GitHub Pages website that lets you describe what you 
 * ⚡ Powered by Groq
 * 🔖 Generates bookmarklets only
 * 📋 One-click **Copy** button
+* 📝 **Bookmarklet Editor** for adding, editing, and removing saved bookmarklets
 * 🌐 Works as a static GitHub Pages site
 * 📄 Everything runs from a single `index.html`
 * ⌨️ `Ctrl + Enter` / `Cmd + Enter` generates a bookmarklet
@@ -75,6 +76,13 @@ Copy
 ```
 
 and paste it into a browser bookmark.
+
+## 📝 Bookmarklet Editor
+
+Open the **Bookmarklet Editor** tab to save bookmarklets in your browser. Give
+each bookmarklet a name, paste its `javascript:` code, and use the **Edit** or
+**Remove** actions to manage the local list. The **Use Current Output** button
+copies the latest generated bookmarklet into the editor form.
 
 ## 🔑 API Key
 

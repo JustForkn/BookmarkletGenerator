@@ -1182,6 +1182,85 @@ pre{
 }
 
 /* =========================================================
+   BOOKMARKLET EDITOR
+========================================================= */
+
+.editorForm{
+    display:grid;
+    gap:12px;
+}
+
+.editorInput,
+.editorCode{
+    width:100%;
+    border:1px solid #25332f;
+    border-radius:12px;
+    outline:none;
+    background:#05090d;
+    color:#e4efe9;
+    padding:13px 14px;
+    font:12px ui-monospace,monospace;
+}
+
+.editorInput{
+    height:46px;
+}
+
+.editorCode{
+    min-height:150px;
+    resize:vertical;
+    line-height:1.6;
+}
+
+.editorInput:focus,
+.editorCode:focus{
+    border-color:rgba(99,255,157,.35);
+}
+
+.editorActions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+}
+
+.editorList{
+    margin-top:24px;
+}
+
+.editorItem{
+    align-items:flex-start;
+    cursor:default;
+}
+
+.editorItem:hover{
+    transform:none;
+}
+
+.editorItem .historyText{
+    flex:1;
+}
+
+.editorItem .historyText span{
+    display:block;
+    margin-top:5px;
+    max-width:680px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.editorItemActions{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+}
+
+.dangerButton:hover{
+    color:var(--red);
+    border-color:rgba(255,85,112,.35);
+}
+
+/* =========================================================
    TOAST
 ========================================================= */
 
@@ -1402,6 +1481,20 @@ pre{
 
                 <span class="navText">
                     History
+                </span>
+
+            </button>
+
+
+            <button
+                class="navButton"
+                data-panel="editor"
+            >
+
+                <span class="navIcon">✎</span>
+
+                <span class="navText">
+                    Bookmarklet Editor
                 </span>
 
             </button>
@@ -1721,6 +1814,102 @@ pre{
                 </div>
 
             </section>
+
+        </section>
+
+
+        <!-- =================================================
+             BOOKMARKLET EDITOR PANEL
+        ================================================= -->
+
+        <section
+            id="panel-editor"
+            class="panel"
+        >
+
+            <div class="hero">
+
+                <div class="heroEyebrow">
+                    SAVED BOOKMARKLETS
+                </div>
+
+                <h1>
+                    Bookmarklet
+                    <span>Editor.</span>
+                </h1>
+
+                <p>
+                    Add, edit, and remove bookmarklets saved in this browser.
+                </p>
+
+            </div>
+
+
+            <div class="settingsCard">
+
+                <div class="settingsTitle" id="editorFormTitle">
+                    Add Bookmarklet
+                </div>
+
+                <div class="settingsDescription">
+                    Keep reusable bookmarklet code organized locally.
+                </div>
+
+                <form id="editorForm" class="editorForm">
+
+                    <input
+                        id="editorName"
+                        class="editorInput"
+                        type="text"
+                        placeholder="Bookmarklet name"
+                        maxlength="100"
+                        required
+                    >
+
+                    <textarea
+                        id="editorCode"
+                        class="editorCode"
+                        placeholder="javascript:..."
+                        spellcheck="false"
+                        required
+                    ></textarea>
+
+                    <div class="editorActions">
+
+                        <button
+                            class="primarySmall"
+                            type="submit"
+                        >
+                            Save Bookmarklet
+                        </button>
+
+                        <button
+                            id="useGeneratedButton"
+                            class="secondarySmall"
+                            type="button"
+                        >
+                            Use Current Output
+                        </button>
+
+                        <button
+                            id="cancelEditButton"
+                            class="secondarySmall"
+                            type="button"
+                            hidden
+                        >
+                            Cancel Edit
+                        </button>
+
+                    </div>
+
+                </form>
+
+                <div
+                    id="editorList"
+                    class="historyList editorList"
+                ></div>
+
+            </div>
 
         </section>
 
@@ -2075,6 +2264,29 @@ const toastContainer =
 const historyList =
     document.getElementById("historyList");
 
+const editorForm =
+    document.getElementById("editorForm");
+
+const editorFormTitle =
+    document.getElementById("editorFormTitle");
+
+const editorName =
+    document.getElementById("editorName");
+
+const editorCode =
+    document.getElementById("editorCode");
+
+const editorList =
+    document.getElementById("editorList");
+
+const cancelEditButton =
+    document.getElementById("cancelEditButton");
+
+const useGeneratedButton =
+    document.getElementById("useGeneratedButton");
+
+let editingBookmarkletId = null;
+
 const apiPanelInput =
     document.getElementById("apiPanelInput");
 
@@ -2414,6 +2626,12 @@ navButtons.forEach(
                     target === "history"
                 ){
                     renderHistory();
+                }
+
+                if(
+                    target === "editor"
+                ){
+                    renderBookmarklets();
                 }
 
             }
@@ -2962,6 +3180,241 @@ function renderHistory(){
     );
 
 }
+
+
+/* =========================================================
+   BOOKMARKLET EDITOR
+========================================================= */
+
+function getBookmarklets(){
+
+    try{
+
+        return JSON.parse(
+            localStorage.getItem(
+                "bookmarklet-library"
+            ) || "[]"
+        );
+
+    }
+    catch(error){
+
+        return [];
+
+    }
+
+}
+
+
+function saveBookmarklets(bookmarklets){
+
+    localStorage.setItem(
+        "bookmarklet-library",
+        JSON.stringify(bookmarklets)
+    );
+
+}
+
+
+function resetEditorForm(){
+
+    editingBookmarkletId = null;
+    editorForm.reset();
+    editorFormTitle.textContent =
+        "Add Bookmarklet";
+    cancelEditButton.hidden = true;
+
+}
+
+
+function renderBookmarklets(){
+
+    const bookmarklets =
+        getBookmarklets();
+
+
+    if(!bookmarklets.length){
+
+        editorList.innerHTML =
+            `
+            <div class="emptyState">
+                No saved bookmarklets yet.
+            </div>
+            `;
+
+        return;
+
+    }
+
+
+    editorList.innerHTML = "";
+
+
+    bookmarklets.forEach(
+        (item,index)=>{
+
+            const element =
+                document.createElement("div");
+
+
+            element.className =
+                "historyItem editorItem";
+
+
+            element.innerHTML =
+                `
+                <div class="historyIcon">
+                    ${index + 1}
+                </div>
+
+                <div class="historyText">
+                    <strong>${escapeHtml(item.name)}</strong>
+                    <span>${escapeHtml(item.code)}</span>
+                </div>
+
+                <div class="editorItemActions">
+                    <button class="smallButton" type="button" data-action="edit">
+                        Edit
+                    </button>
+                    <button class="smallButton dangerButton" type="button" data-action="remove">
+                        Remove
+                    </button>
+                </div>
+                `;
+
+
+            element
+                .querySelector('[data-action="edit"]')
+                .addEventListener(
+                    "click",
+                    ()=>{
+                        editingBookmarkletId = item.id;
+                        editorName.value = item.name;
+                        editorCode.value = item.code;
+                        editorFormTitle.textContent =
+                            "Edit Bookmarklet";
+                        cancelEditButton.hidden = false;
+                        editorName.focus();
+                    }
+                );
+
+
+            element
+                .querySelector('[data-action="remove"]')
+                .addEventListener(
+                    "click",
+                    ()=>{
+                        const remaining =
+                            getBookmarklets().filter(
+                                saved => saved.id !== item.id
+                            );
+
+                        saveBookmarklets(remaining);
+
+                        if(editingBookmarkletId === item.id){
+                            resetEditorForm();
+                        }
+
+                        renderBookmarklets();
+                        toast(
+                            "Bookmarklet removed.",
+                            "success"
+                        );
+                    }
+                );
+
+
+            editorList.appendChild(element);
+
+        }
+    );
+
+}
+
+
+editorForm.addEventListener(
+    "submit",
+    event=>{
+
+        event.preventDefault();
+
+        const name = editorName.value.trim();
+        const code = editorCode.value.trim();
+
+        if(!name || !code){
+            toast(
+                "Add a name and bookmarklet code.",
+                "error"
+            );
+            return;
+        }
+
+        const bookmarklets = getBookmarklets();
+        const existingIndex = bookmarklets.findIndex(
+            item => item.id === editingBookmarkletId
+        );
+
+        const savedBookmarklet = {
+            id:
+                editingBookmarkletId ||
+                String(Date.now()) + Math.random(),
+            name,
+            code,
+            time: Date.now()
+        };
+
+        if(existingIndex >= 0){
+            bookmarklets[existingIndex] = savedBookmarklet;
+        }
+        else{
+            bookmarklets.unshift(savedBookmarklet);
+        }
+
+        saveBookmarklets(bookmarklets);
+        resetEditorForm();
+        renderBookmarklets();
+        toast(
+            existingIndex >= 0
+                ? "Bookmarklet updated."
+                : "Bookmarklet added.",
+            "success"
+        );
+
+    }
+);
+
+
+cancelEditButton.addEventListener(
+    "click",
+    resetEditorForm
+);
+
+
+useGeneratedButton.addEventListener(
+    "click",
+    ()=>{
+        const currentCode =
+            bookmarkletCode.textContent.trim();
+
+        if(!currentCode){
+            toast(
+                "Generate a bookmarklet first.",
+                "error"
+            );
+            return;
+        }
+
+        editorCode.value = currentCode;
+        editorName.focus();
+        toast(
+            "Current output added to the editor.",
+            "success"
+        );
+    }
+);
+
+
+renderBookmarklets();
 
 
 /* =========================================================
