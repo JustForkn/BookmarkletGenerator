@@ -1125,6 +1125,11 @@ pre{
     cursor:pointer;
 }
 
+.secondarySmall:disabled{
+    cursor:not-allowed;
+    opacity:.55;
+}
+
 /* =========================================================
    HISTORY
 ========================================================= */
@@ -1210,6 +1215,10 @@ pre{
     min-height:150px;
     resize:vertical;
     line-height:1.6;
+}
+
+.editorPrompt{
+    min-height:92px;
 }
 
 .editorInput:focus,
@@ -1874,6 +1883,12 @@ pre{
                         required
                     ></textarea>
 
+                    <textarea
+                        id="editorPrompt"
+                        class="editorCode editorPrompt"
+                        placeholder="Tell AI what to add, change, or remove from this bookmarklet..."
+                    ></textarea>
+
                     <div class="editorActions">
 
                         <button
@@ -1889,6 +1904,14 @@ pre{
                             type="button"
                         >
                             Use Current Output
+                        </button>
+
+                        <button
+                            id="aiEditButton"
+                            class="secondarySmall"
+                            type="button"
+                        >
+                            AI Edit Bookmarklet
                         </button>
 
                         <button
@@ -2276,6 +2299,9 @@ const editorName =
 const editorCode =
     document.getElementById("editorCode");
 
+const editorPrompt =
+    document.getElementById("editorPrompt");
+
 const editorList =
     document.getElementById("editorList");
 
@@ -2284,6 +2310,9 @@ const cancelEditButton =
 
 const useGeneratedButton =
     document.getElementById("useGeneratedButton");
+
+const aiEditButton =
+    document.getElementById("aiEditButton");
 
 let editingBookmarkletId = null;
 
@@ -3379,6 +3408,102 @@ editorForm.addEventListener(
                 : "Bookmarklet added.",
             "success"
         );
+
+    }
+);
+
+
+aiEditButton.addEventListener(
+    "click",
+    async()=>{
+
+        const prompt =
+            editorPrompt.value.trim();
+
+        const bookmarklets =
+            getBookmarklets();
+
+        const selected =
+            bookmarklets.find(
+                item => item.id === editingBookmarkletId
+            );
+
+        if(!selected){
+            toast(
+                "Click Edit on a bookmarklet first.",
+                "error"
+            );
+            return;
+        }
+
+        if(!prompt){
+            toast(
+                "Describe what AI should change.",
+                "error"
+            );
+            return;
+        }
+
+        const key = getActiveKey();
+
+        if(!key){
+            toast(
+                "Add your Groq API key before using AI Edit.",
+                "error"
+            );
+            return;
+        }
+
+        aiEditButton.disabled = true;
+        startLoading();
+
+        const editPrompt = `
+Edit this existing browser bookmarklet according to the user's request.
+Return the complete updated bookmarklet, preserving existing behavior unless
+the user asks to remove or replace it. Add, change, or delete code as needed.
+
+User request:
+${prompt}
+
+Existing bookmarklet:
+${editorCode.value.trim() || selected.code}
+`;
+
+        try{
+
+            const updatedCode =
+                await generateWithGroq(
+                    editPrompt,
+                    key
+                );
+
+            selected.code = updatedCode;
+            selected.time = Date.now();
+            saveBookmarklets(bookmarklets);
+            editorCode.value = updatedCode;
+            editorPrompt.value = "";
+            renderBookmarklets();
+            toast(
+                "Bookmarklet updated by AI.",
+                "success"
+            );
+
+        }
+        catch(error){
+
+            toast(
+                error.message ||
+                "AI editing failed.",
+                "error"
+            );
+
+        }
+        finally{
+
+            finishLoading();
+            aiEditButton.disabled = false;
+
+        }
 
     }
 );

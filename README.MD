@@ -82,7 +82,9 @@ and paste it into a browser bookmark.
 Open the **Bookmarklet Editor** tab to save bookmarklets in your browser. Give
 each bookmarklet a name, paste its `javascript:` code, and use the **Edit** or
 **Remove** actions to manage the local list. The **Use Current Output** button
-copies the latest generated bookmarklet into the editor form.
+copies the latest generated bookmarklet into the editor form. Select **Edit**,
+describe a change in the AI prompt, and click **AI Edit Bookmarklet** to have
+Groq add, change, or remove behavior and save the updated code.
 
 ## 🔑 API Key
 
